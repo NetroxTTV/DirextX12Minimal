@@ -86,7 +86,7 @@ void RenderWindow::BeginDraw()
     CD3DX12_CPU_DESCRIPTOR_HANDLE currentBackBufferView(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mCurrBackBuffer, mRtvDescriptorSize);
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = GetDepthStencilView();
 
-    mCommandList->ClearRenderTargetView(currentBackBufferView, DirectX::Colors::LightSteelBlue, 0, nullptr);
+    mCommandList->ClearRenderTargetView(currentBackBufferView, DirectX::Colors::LightGray, 0, nullptr);
     mCommandList->ClearDepthStencilView(depthStencilView, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     mCommandList->OMSetRenderTargets(1, &currentBackBufferView, true, &depthStencilView);

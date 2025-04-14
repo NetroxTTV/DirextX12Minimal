@@ -3,91 +3,108 @@
 #include "Geometrie.h"
 #include "Transform.h"
 
+#include <ctime>      // For srand/time
+#include <cstdlib>    // For rand
+#include <cmath>      // For roundf
+#include <DirectXMath.h>
+#include <chrono>
+
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
     RenderWindow* window = new RenderWindow(hInst);
     window->Initialize();
 
-    Geometrie* geo = new Geometrie();
-    geo->CreateCube(window->GetDevice(), window->GetCommandList(), 1.0f, 1.0f, 1.0f);
+    Geometrie* cubes[3];
+    for (int i = 0; i < 3; ++i) {
+        cubes[i] = new Geometrie();
+        cubes[i]->CreateCube(window->GetDevice(), window->GetCommandList(), 1.0f, 1.0f, 1.0f);
+    }
     window->CloseCommandList();
 
-    UploadBuffer<ObjectData>* constantBuffer = new UploadBuffer<ObjectData>(window->GetDevice(), 1, true);
-    constantBuffer->Resource()->SetName(L"PASS_BUFFER");
+    UploadBuffer<ObjectData>* constantBuffers[3];
+    for (int i = 0; i < 3; ++i) {
+        constantBuffers[i] = new UploadBuffer<ObjectData>(window->GetDevice(), 1, true);
+        constantBuffers[i]->Resource()->SetName(L"PASS_BUFFER");
+    }
 
-    UploadBuffer<ObjectData>* constantBuffer2 = new UploadBuffer<ObjectData>(window->GetDevice(), 1, true);
-    constantBuffer->Resource()->SetName(L"PASS_BUFFER");
-
-    TRANSFORM transform;
-    transform.Reset();
-    transform.SetPosition(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
-    transform.SetRotationYPR(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
-
-    TRANSFORM transform2;
-    transform2.Reset();
-    transform2.SetPosition(XMFLOAT3{ 2.0f, 0.0f, 0.0f });
-    transform2.SetRotationYPR(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
+    TRANSFORM transforms[3];
+    transforms[0].SetPosition(XMFLOAT3{ -2.0f, 0.0f, 0.0f });
+    transforms[1].SetPosition(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
+    transforms[2].SetPosition(XMFLOAT3{ 2.0f, 0.0f, 0.0f });
 
     bool closed = false;
-    float angle = 0;
-    float time = 0;
+    float time = 0.0f;
+    float rotationSpeeds[3] = { 1.0f, 1.5f, 2.0f };
+
+    bool isSpacePressed = false;
+    float speedMultiplier = 1.5f;
+
+    float stopTimers[3] = { 0.0f, 0.0f, 0.0f };
+    float stopDurations[3];
+    bool isStopped[3] = { false, false, false };
+
+    srand(static_cast<unsigned int>(std::time(nullptr)));
+    for (int i = 0; i < 3; ++i) {
+        stopDurations[i] = 5.0f + static_cast<float>(rand()) / RAND_MAX * 7.0f;
+    }
+
+    bool isRotating = false;
+
     while (!closed) {
         time += 0.001f;
         window->Update();
+
         int event;
         while (window->PollWindowEvents(event)) {
             if (event == WM_QUIT) {
                 closed = true;
             }
+            if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
+                if (!isSpacePressed) {
+                    isRotating = !isRotating;
+                    isSpacePressed = true;
+                }
+            }
         }
 
-        bool Z = GetAsyncKeyState('Z') < 0;
-        bool Q = GetAsyncKeyState('Q') < 0;
-        bool S = GetAsyncKeyState('S') < 0;
-        bool D = GetAsyncKeyState('D') < 0;
+        for (int i = 0; i < 3; ++i) {
+            if (!isStopped[i]) {
+                stopTimers[i] += 0.001f;
 
-        bool A = GetAsyncKeyState('A') < 0;
-        bool E = GetAsyncKeyState('E') < 0;
+                float angle = 0.0f;
 
-        XMFLOAT3 forward = window->cam.Forward();
-        XMFLOAT3 right = window->cam.Right();
+                if (isRotating) {
+                    angle = time * rotationSpeeds[i] * speedMultiplier;
+                }
 
-        if (Z) {
-            window->cam.OffsetPosition(XMFLOAT3{ forward.x * 0.005f, 0, forward.z * 0.005f });
-        }
-        if (Q) {
-            window->cam.OffsetPosition(XMFLOAT3{ -right.x * 0.005f, 0, -right.z * 0.005f });
-        }
-        if (S) {
-            window->cam.OffsetPosition(XMFLOAT3{ -forward.x * 0.005f, 0, -forward.z * 0.005f });
-        }
-        if (D) {
-            window->cam.OffsetPosition(XMFLOAT3{ right.x * 0.005f, 0, right.z * 0.005f });
-        }
+                if (stopTimers[i] >= stopDurations[i]) {
+                    float snappedAngle = roundf(angle / DirectX::XM_PIDIV2) * DirectX::XM_PIDIV2;
+                    angle = snappedAngle;
+                    isStopped[i] = true;
+                }
 
-        if (A) {
-            angle -= 0.001f;
-        }
-        if (E) {
-            angle += 0.001f;
-        }
-        window->cam.SetRotationYPR(XMFLOAT3{ angle, 0, 0 });
+                transforms[i].SetRotationYPR(XMFLOAT3{ 0, angle, 0 });
+            }
 
-        transform.SetRotationYPR(XMFLOAT3{ time, time, 0 });
-
-        ObjectData objConstants;
-        DirectX::XMStoreFloat4x4(&objConstants.world, DirectX::XMMatrixTranspose(transform.GetMatrix()));
-        constantBuffer->CopyData(0, objConstants);
-        
-        DirectX::XMStoreFloat4x4(&objConstants.world, DirectX::XMMatrixTranspose(transform2.GetMatrix()));
-        constantBuffer2->CopyData(0, objConstants);
+            ObjectData objConstants;
+            DirectX::XMStoreFloat4x4(&objConstants.world, DirectX::XMMatrixTranspose(transforms[i].GetMatrix()));
+            constantBuffers[i]->CopyData(0, objConstants);
+        }
 
         window->BeginDraw();
-
-        window->Draw(*window->mShader, *geo, constantBuffer);
-        window->Draw(*window->mShader, *geo, constantBuffer2);
-
+        for (int i = 0; i < 3; ++i) {
+            window->Draw(*window->mShader, *cubes[i], constantBuffers[i]);
+        }
         window->EndDraw();
     }
-    
+
+    // Cleanup resources
+    for (int i = 0; i < 3; ++i) {
+        delete cubes[i];
+        delete constantBuffers[i];
+    }
+    delete window;
+
+
+    return 0;
 }
