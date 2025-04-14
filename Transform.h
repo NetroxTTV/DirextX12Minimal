@@ -14,7 +14,7 @@ struct TRANSFORM
 	XMFLOAT3 mvRight;
 	XMFLOAT3 mvUp;
 	XMFLOAT3 mvForward;
-	XMFLOAT3 mvOrigin;
+	XMFLOAT3 mvOrigin; 
 
 	XMFLOAT4 mqRotation;
 	XMFLOAT4X4 mmRotation;

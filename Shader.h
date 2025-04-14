@@ -11,3 +11,4 @@ public:
     ID3D12RootSignature* mRootSignature;
     ID3D12PipelineState* mPSO;
 };
+ 

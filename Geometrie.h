@@ -17,7 +17,7 @@ struct MeshData
     std::vector<uint32> Indices32;
 
     std::vector<uint16>& GetIndices16()
-    {
+    { 
         if(mIndices16.empty())
         {
             mIndices16.resize(Indices32.size());

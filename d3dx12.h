@@ -16,7 +16,7 @@
 
 struct CD3DX12_DEFAULT {};
 extern const DECLSPEC_SELECTANY CD3DX12_DEFAULT D3D12_DEFAULT;
-
+ 
 //------------------------------------------------------------------------------------------------
 inline bool operator==( const D3D12_VIEWPORT& l, const D3D12_VIEWPORT& r )
 {

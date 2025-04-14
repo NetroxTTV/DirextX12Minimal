@@ -14,7 +14,7 @@
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
-#include <DirectXColors.h>
+#include <DirectXColors.h> 
 #include <DirectXCollision.h>
 #include <string>
 #include <memory>

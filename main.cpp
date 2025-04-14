@@ -3,11 +3,11 @@
 #include "Geometrie.h"
 #include "Transform.h"
 
-#include <ctime>      // For srand/time
-#include <cstdlib>    // For rand
-#include <cmath>      // For roundf
-#include <DirectXMath.h>
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
 #include <chrono>
+#include <DirectXMath.h>
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
@@ -32,60 +32,84 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
     transforms[1].SetPosition(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
     transforms[2].SetPosition(XMFLOAT3{ 2.0f, 0.0f, 0.0f });
 
-    bool closed = false;
-    float time = 0.0f;
     float rotationSpeeds[3] = { 1.0f, 1.5f, 2.0f };
+    float angles[3] = { 0.0f, 0.0f, 0.0f };
+    float stopDurations[3] = { 0.0f, 0.0f, 0.0f };
+    bool isStopped[3] = { true, true, true };
 
     bool isSpacePressed = false;
-    float speedMultiplier = 1.5f;
-
-    float stopTimers[3] = { 0.0f, 0.0f, 0.0f };
-    float stopDurations[3];
-    bool isStopped[3] = { false, false, false };
-
-    srand(static_cast<unsigned int>(std::time(nullptr)));
-    for (int i = 0; i < 3; ++i) {
-        stopDurations[i] = 5.0f + static_cast<float>(rand()) / RAND_MAX * 7.0f;
-    }
-
     bool isRotating = false;
+    bool isStartingSpin = false;
 
-    while (!closed) {
-        time += 0.001f;
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    std::chrono::steady_clock::time_point spinStartTime;
+    static float elapsed = 0.0f;
+
+    auto startSpin = [&]() {
+        isStartingSpin = true; 
+        isRotating = false;
+
+        for (int i = 0; i < 3; ++i) {
+            angles[i] = 0.0f;
+            stopDurations[i] = 5.0f + static_cast<float>(rand()) / RAND_MAX * 5.0f;
+            isStopped[i] = false;
+        }
+        };
+
+    while (true) {
+        auto now = std::chrono::steady_clock::now();
+
+        if (isStartingSpin) {
+            spinStartTime = now;
+            isStartingSpin = false;
+            isRotating = true;
+            elapsed = 0.0f;
+        }
+        else {
+            elapsed = std::chrono::duration<float>(now - spinStartTime).count();
+        }
+
         window->Update();
 
         int event;
         while (window->PollWindowEvents(event)) {
             if (event == WM_QUIT) {
-                closed = true;
+                goto cleanup;
             }
-            if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                if (!isSpacePressed) {
-                    isRotating = !isRotating;
-                    isSpacePressed = true;
+            else if (event == WM_KEYDOWN && !isSpacePressed) {
+                isSpacePressed = true;
+
+                if (isStopped[0] && isStopped[1] && isStopped[2]) {
+                    startSpin();
                 }
+            }
+            else if (event == WM_KEYUP) {
+                isSpacePressed = false;
+            }
+        }
+
+        if (isRotating) {
+            for (int i = 0; i < 3; ++i) {
+                if (!isStopped[i]) {
+                    if (elapsed >= stopDurations[i]) {
+                        float finalAngle = stopDurations[i] * rotationSpeeds[i];
+                        angles[i] = roundf(finalAngle / DirectX::XM_PIDIV2) * DirectX::XM_PIDIV2;
+                        isStopped[i] = true;
+                    }
+                    else {
+                        angles[i] = elapsed * rotationSpeeds[i];
+                    }
+                    transforms[i].SetRotationYPR(XMFLOAT3{ 0, angles[i], 0 });
+                }
+            }
+
+            if (isStopped[0] && isStopped[1] && isStopped[2]) {
+                isRotating = false;
             }
         }
 
         for (int i = 0; i < 3; ++i) {
-            if (!isStopped[i]) {
-                stopTimers[i] += 0.001f;
-
-                float angle = 0.0f;
-
-                if (isRotating) {
-                    angle = time * rotationSpeeds[i] * speedMultiplier;
-                }
-
-                if (stopTimers[i] >= stopDurations[i]) {
-                    float snappedAngle = roundf(angle / DirectX::XM_PIDIV2) * DirectX::XM_PIDIV2;
-                    angle = snappedAngle;
-                    isStopped[i] = true;
-                }
-
-                transforms[i].SetRotationYPR(XMFLOAT3{ 0, angle, 0 });
-            }
-
             ObjectData objConstants;
             DirectX::XMStoreFloat4x4(&objConstants.world, DirectX::XMMatrixTranspose(transforms[i].GetMatrix()));
             constantBuffers[i]->CopyData(0, objConstants);
@@ -98,13 +122,12 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         window->EndDraw();
     }
 
-    // Cleanup resources
+cleanup:
     for (int i = 0; i < 3; ++i) {
         delete cubes[i];
         delete constantBuffers[i];
     }
     delete window;
-
 
     return 0;
 }

@@ -17,7 +17,7 @@ public:
     
     virtual LRESULT InputHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-    bool PollWindowEvents(int& eventCode);
+    bool PollWindowEvents(int& eventCode); 
     virtual void Update() = 0;
     
     void Set4xMsaaState(bool value);

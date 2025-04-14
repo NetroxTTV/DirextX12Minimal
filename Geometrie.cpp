@@ -73,7 +73,7 @@ void Geometrie::CreateCube(ID3D12Device* device, ID3D12GraphicsCommandList* comm
 
 		// BOTTOM
 		20, 21, 22,
-		20, 22, 23
+		20, 22, 23 
 	};
 
 	meshData.Indices32.assign(&i[0], &i[36]);

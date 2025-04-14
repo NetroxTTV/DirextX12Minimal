@@ -18,7 +18,7 @@ TRANSFORM::TRANSFORM()
 {
 	Reset();
 }
-
+ 
 TRANSFORM::TRANSFORM(const XMFLOAT3& _position, const XMFLOAT3& _rotationYawPitchRoll, const XMFLOAT3& _scaling)
 {
 

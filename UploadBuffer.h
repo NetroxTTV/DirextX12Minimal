@@ -14,7 +14,7 @@ public:
 
         // Constant buffer elements need to be multiples of 256 bytes.
         if(isConstantBuffer)
-            mElementByteSize = d3dUtils::CalcConstantBufferByteSize(sizeof(T));
+            mElementByteSize = d3dUtils::CalcConstantBufferByteSize(sizeof(T)); 
 
         CD3DX12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize*elementCount);

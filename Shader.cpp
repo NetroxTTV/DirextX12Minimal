@@ -19,7 +19,7 @@ Shader::Shader(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvForma
     ID3DBlob* serializedRootSig = nullptr;
     ID3DBlob* errorBlob = nullptr;
     D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-        &serializedRootSig, &errorBlob);
+        &serializedRootSig, &errorBlob); 
 
     device->CreateRootSignature(
         0,

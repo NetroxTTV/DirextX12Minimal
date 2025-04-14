@@ -17,7 +17,7 @@
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
 #include <string>
-#include <memory>
+#include <memory> 
 #include <algorithm>
 #include <vector>
 #include <array>

@@ -1,4 +1,4 @@
-﻿#pragma once
+﻿ #pragma once
 
 #include "d3dUtils.h"
 #include "UploadBuffer.h"

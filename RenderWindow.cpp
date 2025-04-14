@@ -16,7 +16,7 @@ bool RenderWindow::Initialize()
     Window::Initialize();
 
     OpenCommandList();
-
+     
     cam.Reset();
     cam.SetPosition(XMFLOAT3{ 0.0f, 0.0f, -5.0f });
     cam.SetRotationYPR(XMFLOAT3{ 0.0f, 0.0f, 0.0f });
